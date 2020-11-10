@@ -47,3 +47,29 @@ export const humanizeDateSpread = (startDate, finishDate) => {
   const spreadMinutes = Math.trunc(Math.abs(spread) / (1000 * 60)) - (spreadDay * 24 * 60) - (spreadHours * 60);
   return `${spreadDay > 0 ? `${spreadDay}D ` : ``}${spreadHours > 0 ? `${spreadHours}H ` : ``}${spreadMinutes > 0 ? `${spreadMinutes}M ` : ``}`;
 };
+
+export const RenderPosition = {
+  AFTERBEGIN: `afterbegin`,
+  BEFOREEND: `beforeend`,
+  AFTEREND: `afterend`
+};
+
+export const render = (container, element, place) => {
+  switch (place) {
+    case RenderPosition.AFTERBEGIN:
+      container.prepend(element);
+      break;
+    case RenderPosition.BEFOREEND:
+      container.append(element);
+      break;
+    case RenderPosition.AFTEREND:
+      container.after(element);
+      break;
+  }
+};
+
+export const createElement = (template) => {
+  const newElement = document.createElement(`div`);
+  newElement.innerHTML = template;
+  return newElement.firstChild;
+};
