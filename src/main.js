@@ -1,75 +1,67 @@
-import RouteInfo from './components/route-info.js';
-import RouteCost from "./components/route-cost.js";
-import Menu from './components/menu.js';
-import Filters from './components/filters.js';
-import Sort from './components/sort.js';
-import TripDays from "./components/trip-days";
-import EventForm from "./components/event-edit";
-import TripEvent from "./components/event";
-import TripDay from "./components/trip-day";
+import RouteInfo from './view/route-info.js';
+import RouteCost from "./view/route-cost.js";
+import Menu from './view/menu.js';
+import Filters from './view/filters.js';
+import Sort from './view/sort.js';
+import TripDays from "./view/trip-days";
+import EventForm from "./view/event-edit";
+import TripEvent from "./view/event";
+import TripDay from "./view/trip-day";
 
 import {generateEvent} from "./mock/event.js";
-import {render, RenderPosition} from "./utils";
-import NoEvents from "./components/no-events";
+import NoEvents from "./view/no-events";
+import {render, RenderPosition, replace} from "./utils/render";
 
 const EVENT_COUNT = 24;
 
 const events = new Array(EVENT_COUNT).fill(``).map(generateEvent).sort((a, b) => a.startDate - b.startDate);
 
 const siteTripMainElement = document.querySelector(`.trip-main`);
-render(siteTripMainElement, new RouteInfo(events).getElement(), RenderPosition.AFTERBEGIN);
+render(siteTripMainElement, new RouteInfo(events), RenderPosition.AFTERBEGIN);
 
 const siteTripInfoElement = document.querySelector(`.trip-info`);
-render(siteTripInfoElement, new RouteCost(events).getElement(), RenderPosition.BEFOREEND);
+render(siteTripInfoElement, new RouteCost(events), RenderPosition.BEFOREEND);
 
 const siteEventsElement = document.querySelector(`.trip-events`);
 const siteMenuElement = document.querySelector(`#js-trip-menu`);
 const siteFiltersElement = document.querySelector(`#js-trip-filter`);
 
-render(siteMenuElement, new Menu().getElement(), RenderPosition.AFTEREND);
-render(siteFiltersElement, new Filters().getElement(), RenderPosition.AFTEREND);
+render(siteMenuElement, new Menu(), RenderPosition.AFTEREND);
+render(siteFiltersElement, new Filters(), RenderPosition.AFTEREND);
 
 if (events.length < 1) {
-  render(siteEventsElement, new NoEvents().getElement(), RenderPosition.BEFOREEND);
+  render(siteEventsElement, new NoEvents(), RenderPosition.BEFOREEND);
 } else {
 
-  render(siteEventsElement, new Sort().getElement(), RenderPosition.BEFOREEND);
-  render(siteEventsElement, new EventForm().getElement(), RenderPosition.BEFOREEND);
+  render(siteEventsElement, new Sort(), RenderPosition.BEFOREEND);
+  render(siteEventsElement, new EventForm(), RenderPosition.BEFOREEND);
 
   const renderEvent = (eventsListElement, event) => {
     const eventComponent = new TripEvent(event);
     const eventEditComponent = new EventForm(event);
 
-    const replaceCardToForm = () => {
-      eventsListElement.replaceChild(eventEditComponent.getElement(), eventComponent.getElement());
-    };
-
-    const replaceFormToCard = () => {
-      eventsListElement.replaceChild(eventComponent.getElement(), eventEditComponent.getElement());
-    };
-
-    const onEditClose = (evt) => {
-      evt.preventDefault();
-      replaceFormToCard();
-      document.removeEventListener(`keydown`, onEscKeyDown);
-    };
-
     const onEscKeyDown = (evt) => {
       if (evt.key === `Escape` || evt.key === `Esc`) {
         evt.preventDefault();
-        replaceFormToCard();
+        replace(eventComponent, eventEditComponent);
         document.removeEventListener(`keydown`, onEscKeyDown);
       }
     };
 
-    eventComponent.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
-      replaceCardToForm();
-      eventEditComponent.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, onEditClose);
-      eventEditComponent.getElement().querySelector(`form`).addEventListener(`submit`, onEditClose);
+    eventComponent.setEditClickHandler(() => {
+      replace(eventEditComponent, eventComponent);
+      eventEditComponent.setEditClickHandler(() => {
+        replace(eventComponent, eventEditComponent);
+        document.removeEventListener(`keydown`, onEscKeyDown);
+      });
+      eventEditComponent.setFormSubmitHandler(() => {
+        replace(eventComponent, eventEditComponent);
+        document.removeEventListener(`keydown`, onEscKeyDown);
+      });
       document.addEventListener(`keydown`, onEscKeyDown);
     });
 
-    render(eventsListElement, eventComponent.getElement(), RenderPosition.BEFOREEND);
+    render(eventsListElement, eventComponent, RenderPosition.BEFOREEND);
   };
 
   const siteDaysElement = new TripDays().getElement();
@@ -77,17 +69,18 @@ if (events.length < 1) {
 
   let currentDay = new Date(0).getDate();
 
-  let siteEventsListElement;
+  let dayEventsListElement;
   let dayCounter = 1;
   for (const event of events) {
     if (currentDay !== event.startDate.getDate()) {
-      render(siteDaysElement, new TripDay(dayCounter, event.startDate).getElement(), RenderPosition.BEFOREEND);
-      siteEventsListElement = siteDaysElement.querySelector(`.trip-days__item:last-child .trip-events__list`);
+      const tripDay = new TripDay(dayCounter, event.startDate);
+      render(siteDaysElement, tripDay, RenderPosition.BEFOREEND);
+      dayEventsListElement = tripDay.getEventsList();
       currentDay = event.startDate.getDate();
       dayCounter++;
     }
 
-    renderEvent(siteEventsListElement, event);
+    renderEvent(dayEventsListElement, event);
   }
 }
 

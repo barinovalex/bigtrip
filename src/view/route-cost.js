@@ -1,4 +1,4 @@
-import {createElement} from "../utils.js";
+import Abstract from "./abstract";
 
 const createRouteCostTemplate = (events) => {
 
@@ -11,25 +11,14 @@ const createRouteCostTemplate = (events) => {
             </p>`;
 };
 
-export default class RouteCost {
+export default class RouteCost extends Abstract {
   constructor(events) {
-    this._element = null;
+    super();
+
     this._events = events;
   }
 
   getTemplate() {
     return createRouteCostTemplate(this._events);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

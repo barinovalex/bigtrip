@@ -1,7 +1,7 @@
 import {eventTypes} from "../mock/event";
-import {upCaseFirst, humanizeDateInput} from "../utils.js";
+import {upCaseFirst, humanizeDateInput} from "../utils/common.js";
 import {NAME_PLACES} from "../mock/place.js";
-import {createElement} from "../utils";
+import Abstract from "./abstract";
 
 const createEditEventTypeTemplate = (event, eventType) => {
   return `<div class="event__type-item">
@@ -141,10 +141,12 @@ const createNewEventFormTemplate = (event) => {
                   </form>`;
 };
 
-export default class EventForm {
+export default class EventForm extends Abstract {
   constructor(event) {
-    this._element = null;
+    super();
     this._event = event;
+    this._editClickHandler = this._editClickHandler.bind(this);
+    this._formSubmitHandler = this._formSubmitHandler.bind(this);
   }
 
   getTemplate() {
@@ -155,15 +157,23 @@ export default class EventForm {
     }
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
+  _editClickHandler(evt) {
+    evt.preventDefault();
+    this._callback.editClick();
   }
 
-  removeElement() {
-    this._element = null;
+  setEditClickHandler(callback) {
+    this._callback.editClick = callback;
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._editClickHandler);
+  }
+
+  _formSubmitHandler(evt) {
+    evt.preventDefault();
+    this._callback.formSubmit();
+  }
+
+  setFormSubmitHandler(callback) {
+    this._callback.formSubmit = callback;
+    this.getElement().querySelector(`form`).addEventListener(`submit`, this._formSubmitHandler);
   }
 }

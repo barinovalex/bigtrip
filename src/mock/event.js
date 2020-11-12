@@ -1,4 +1,4 @@
-import {getRandomInteger, getRandomDate} from "../utils.js";
+import {getRandomInteger, getRandomDate} from "../utils/common.js";
 import {generatePlace} from "../mock/place.js";
 
 export const eventTypes = [
