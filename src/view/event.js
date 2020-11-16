@@ -1,5 +1,5 @@
-import {upCaseFirst, humanizeTime, humanizeDateSpread} from "../utils.js";
-import {createElement} from "../utils";
+import {upCaseFirst, humanizeTime, humanizeDateSpread} from "../utils/common.js";
+import Abstract from "./abstract";
 
 const createEventOfferTemplate = (offer) => {
   const {name, price} = offer;
@@ -11,9 +11,9 @@ const createEventOfferTemplate = (offer) => {
                        </li>`;
 };
 
-const createEventTemplate = (event) => {
-  const {startDate, finishDate, price, place: {name: placeName}} = event;
-  const {name: eventTypeName, action, offers, iconURL} = event.eventType;
+const createEventTemplate = (tripEvent) => {
+  const {startDate, finishDate, price, place: {name: placeName}} = tripEvent;
+  const {name: eventTypeName, action, offers, iconURL} = tripEvent.eventType;
 
   return `<li class="trip-events__item">
                   <div class="event">
@@ -48,26 +48,25 @@ const createEventTemplate = (event) => {
                 </li>`;
 };
 
-export default class TripEvent {
-  constructor(event) {
-    this._element = null;
-    this._event = event;
+export default class TripEvent extends Abstract {
+  constructor(tripEvent) {
+    super();
+    this._event = tripEvent;
+    this._editClickHandler = this._editClickHandler.bind(this);
   }
 
   getTemplate() {
     return createEventTemplate(this._event);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
+  _editClickHandler(evt) {
+    evt.preventDefault();
+    this._callback.editClick();
   }
 
-  removeElement() {
-    this._element = null;
+  setEditClickHandler(callback) {
+    this._callback.editClick = callback;
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, this._editClickHandler);
   }
 }
 

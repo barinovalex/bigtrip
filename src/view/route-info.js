@@ -1,5 +1,5 @@
 import {MONTHS} from "../const";
-import {createElement} from "../utils.js";
+import Abstract from "./abstract";
 
 const createRouteInfoTemplate = (events) => {
   const placesList = [];
@@ -35,9 +35,9 @@ const createEmptyRouteInfoTemplate = () => {
           </section>`;
 };
 
-export default class RouteInfo {
+export default class RouteInfo extends Abstract {
   constructor(events) {
-    this._element = null;
+    super();
     this._events = events;
   }
 
@@ -47,18 +47,5 @@ export default class RouteInfo {
     } else {
       return createEmptyRouteInfoTemplate();
     }
-
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }
