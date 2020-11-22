@@ -3,7 +3,7 @@ import RouteCost from "./view/route-cost.js";
 
 import {generateEvent} from "./mock/event.js";
 import {render, RenderPosition} from "./utils/render";
-import EventsPresenter from "./presenter/events";
+import TripPresenter from "./presenter/trip";
 
 const EVENT_COUNT = 24;
 
@@ -17,5 +17,5 @@ render(siteTripInfoElement, new RouteCost(events), RenderPosition.BEFOREEND);
 
 const siteEventsElement = document.querySelector(`.trip-events`);
 
-const eventsPresenter = new EventsPresenter(siteEventsElement);
+const eventsPresenter = new TripPresenter(siteEventsElement);
 eventsPresenter.init(events);
