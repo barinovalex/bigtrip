@@ -10,7 +10,8 @@ const EVENT_COUNT = 24;
 
 const events = new Array(EVENT_COUNT).fill(``).map(generateEvent).sort((a, b) => a.startDate - b.startDate);
 
-const eventsModel = new Events(events);
+const eventsModel = new Events();
+eventsModel.setEvents(events);
 
 const siteTripMainElement = document.querySelector(`.trip-main`);
 render(siteTripMainElement, new RouteInfo(events), RenderPosition.AFTERBEGIN);
@@ -21,4 +22,4 @@ render(siteTripInfoElement, new RouteCost(events), RenderPosition.BEFOREEND);
 const siteEventsElement = document.querySelector(`.trip-events`);
 
 const eventsPresenter = new TripPresenter(siteEventsElement, eventsModel);
-eventsPresenter.init(events);
+eventsPresenter.init();

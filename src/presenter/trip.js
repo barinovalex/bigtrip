@@ -23,22 +23,30 @@ export default class TripPresenter {
     this._handleModeChange = this._handleModeChange.bind(this);
   }
 
-  init(events) {
-    this._events = events.slice();
-    this._sourcedEvents = events.slice();
+  _getEvents() {
+    switch (this._sortType) {
+      case SortType.TIME:
+        return this._eventsModel.getEvents().sort((a, b) => (a.finishDate - a.startDate) - (b.finishDate - b.startDate));
+      case SortType.PRICE:
+        return this._eventsModel.getEvents().sort((a, b) => a.price - b.price);
+      default:
+        return this._eventsModel.getEvents().sort((a, b) => a.startDate - b.startDate);
+    }
+  }
+
+  init() {
     const siteMenuElement = document.querySelector(`#js-trip-menu`);
     render(siteMenuElement, new Menu(), RenderPosition.AFTEREND);
 
     const siteFiltersElement = document.querySelector(`#js-trip-filter`);
     render(siteFiltersElement, new Filters(), RenderPosition.AFTEREND);
 
-    if (this._events.length < 1) {
+    if (this._getEvents().length < 1) {
       this._renderNoEvents();
       return;
     }
 
     this._renderSort();
-    //    render(this._eventsContainer, new EventForm(), RenderPosition.BEFOREEND);
 
     this._tripDaysComponent = new TripDays().getElement();
     render(this._eventsContainer, this._tripDaysComponent, RenderPosition.BEFOREEND);
@@ -47,8 +55,7 @@ export default class TripPresenter {
   }
 
   _handleEventChange(updatedEvent) {
-    this._events = updateItem(this._events, updatedEvent);
-    this._sourcedEvents = updateItem(this._sourcedEvents, updatedEvent);
+    // Здесь будем вызывать обновление модели
     this._eventsPresenters[updatedEvent.id].init(updatedEvent);
   }
 
@@ -73,16 +80,6 @@ export default class TripPresenter {
       return;
     }
 
-    switch (sortType) {
-      case SortType.TIME:
-        this._events.sort((a, b) => (a.finishDate - a.startDate) - (b.finishDate - b.startDate));
-        break;
-      case SortType.PRICE:
-        this._events.sort((a, b) => a.price - b.price);
-        break;
-      default:
-        this._events = this._sourcedEvents.slice();
-    }
     this._sortType = sortType;
 
     this._replaceSort();
@@ -108,11 +105,11 @@ export default class TripPresenter {
   }
 
   _renderEventsList() {
-    let currentDay = new Date(0).getDate();
+    let currentDay = 0;
     let dayEventsListElement;
     let dayCounter = 1;
     let defaultSortFlag = true;
-    for (const event of this._events) {
+    for (const event of this._getEvents()) {
       if (defaultSortFlag && (currentDay !== event.startDate.getDate())) {
         let tripDay;
         if (this._sortType === SortType.DEFAULT) {
