@@ -1,20 +1,41 @@
 import {eventTypes} from "../mock/event";
 import {upCaseFirst, humanizeDateInput} from "../utils/common.js";
 import {NAME_PLACES} from "../mock/place.js";
-import Abstract from "./abstract";
+import {generatePlace} from "../mock/place";
+import Smart from "./smart";
+
+const getCheckedOffers = (offers) => {
+  const checkedOffers = {};
+  offers.forEach((it) => {
+    checkedOffers[it.name] = false;
+  });
+  return checkedOffers;
+};
+
+const BLANK_EVENT = {
+  eventType: eventTypes[0],
+  checkedOffers: getCheckedOffers(eventTypes[0].offers),
+  finishDate: new Date(),
+  startDate: new Date(),
+  price: 0,
+  place: {},
+  isFavorite: false,
+  newEvent: true,
+};
 
 const createEditEventTypeTemplate = (event, eventType) => {
   return `<div class="event__type-item">
-                              <input id="event-type-${eventType.name}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${eventType.name}
+                              <input id="event-type-${eventType.name}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${eventType.name}"
                               ${eventType.name === event.name ? `checked` : ``}">
-                              <label class="event__type-label  event__type-label--${eventType.name}" for="event-type-taxi-1">${upCaseFirst(eventType.name)}</label>
+                              <label class="event__type-label  event__type-label--${eventType.name}" for="event-type-${eventType.name}-1">${upCaseFirst(eventType.name)}</label>
                             </div>`;
 };
 
-const createEditEventOfferTemplate = (eventOffer) => {
-  const {name, checked, description, price} = eventOffer;
+const createEditEventOfferTemplate = (eventOffer, checkedOffers) => {
+  const {name, description, price} = eventOffer;
+  const checked = checkedOffers === undefined ? false : checkedOffers[name];
   return `<div class="event__offer-selector">
-                            <input class="event__offer-checkbox  visually-hidden" id="event-offer-${name}-1" type="checkbox" name="event-offer-${name}" ${checked ? `checked` : ``}>
+                            <input class="event__offer-checkbox  visually-hidden" id="event-offer-${name}-1" data-offer-name="${name}" type="checkbox" name="event-offer-${name}" ${checked ? `checked` : ``}>
                             <label class="event__offer-label" for="event-offer-${name}-1">
                               <span class="event__offer-title">${description}</span>
                               &plus;
@@ -24,14 +45,16 @@ const createEditEventOfferTemplate = (eventOffer) => {
 };
 
 const createEventFormTemplate = (tripEvent) => {
+
   const {
-    eventType = eventTypes[0],
-    finishDate = new Date(),
-    startDate = new Date(),
-    price = 0,
-    place: {name: placeName, description, photos} = {},
-    isFavorite = false,
-    newEvent = false,
+    eventType,
+    checkedOffers,
+    finishDate,
+    startDate,
+    price,
+    place: {name: placeName, description, photos},
+    isFavorite,
+    newEvent,
   } = tripEvent;
   const {name: eventTypeName, action, offers, iconURL} = eventType;
 
@@ -109,7 +132,7 @@ const createEventFormTemplate = (tripEvent) => {
                         <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
                         <div class="event__available-offers">
-                          ${offers.map(createEditEventOfferTemplate).join(`\n`)}
+                          ${offers.map((it) => createEditEventOfferTemplate(it, checkedOffers)).join(`\n`)}
                         </div>
                       </section>
                     </section>` : ``}
@@ -141,24 +164,93 @@ const createNewEventFormTemplate = (event) => {
                   </form>`;
 };
 
-export default class EventForm extends Abstract {
-  constructor(event) {
+export default class EventForm extends Smart {
+  constructor(event = BLANK_EVENT) {
     super();
     this._event = event;
+    this._data = EventForm.parseEventToData(event);
     this._editClickHandler = this._editClickHandler.bind(this);
     this._formSubmitHandler = this._formSubmitHandler.bind(this);
+    this._favoriteClickHandler = this._favoriteClickHandler.bind(this);
+    this._eventTypeToggleHandler = this._eventTypeToggleHandler.bind(this);
+    this._eventDestinationToggleHandler = this._eventDestinationToggleHandler.bind(this);
+    this._priceInputHandler = this._priceInputHandler.bind(this);
+    this._eventOfferToggleHandler = this._eventOfferToggleHandler.bind(this);
+    this._setInnerHandlers();
+
+  }
+
+  reset(tripEvent = this._event) {
+    this.updateData(
+        EventForm.parseEventToData(tripEvent)
+    );
+  }
+
+  restoreHandlers() {
+    this._setInnerHandlers();
+    this.setFormSubmitHandler(this._callback.formSubmit);
+    this.setEditClickHandler(this._callback.editClick);
+  }
+
+  _setInnerHandlers() {
+    Array.from(this.getElement().querySelectorAll(`input[name=event-type]`))
+      .forEach((it) => it.addEventListener(`click`, this._eventTypeToggleHandler));
+
+    this.getElement()
+      .querySelector(`input[name=event-destination]`)
+      .addEventListener(`change`, this._eventDestinationToggleHandler);
+
+    this.getElement()
+      .querySelector(`.event__input--price`)
+      .addEventListener(`input`, this._priceInputHandler);
+
+    Array.from(this.getElement().querySelectorAll(`.event__offer-checkbox`))
+      .forEach((it) => it.addEventListener(`click`, this._eventOfferToggleHandler));
+  }
+
+  _eventTypeToggleHandler(evt) {
+    const newEventType = eventTypes.find((it) => (it.name === evt.target.value));
+    this.updateData({
+      eventType: newEventType,
+      checkedOffers: getCheckedOffers(newEventType.offers),
+    });
+  }
+
+  _eventOfferToggleHandler(evt) {
+    const updateCheckedOffers = Object.assign(
+        {},
+        this._data.checkedOffers,
+        {[evt.target.dataset.offerName]: !this._data.checkedOffers[evt.target.dataset.offerName]}
+    );
+    this.updateData({
+      checkedOffers: updateCheckedOffers
+    }, true);
+  }
+
+  _eventDestinationToggleHandler() {
+    this.updateData({
+      place: generatePlace()
+    });
+  }
+
+  _priceInputHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      price: evt.target.value
+    }, true);
   }
 
   getTemplate() {
-    if (this._event === undefined) {
-      return createNewEventFormTemplate({newEvent: true});
+    if (this._data.newEvent) {
+      return createNewEventFormTemplate(this._data);
     } else {
-      return createEditEventFormTemplate(this._event);
+      return createEditEventFormTemplate(this._data);
     }
   }
 
   _editClickHandler(evt) {
     evt.preventDefault();
+    this.reset();
     this._callback.editClick();
   }
 
@@ -169,11 +261,32 @@ export default class EventForm extends Abstract {
 
   _formSubmitHandler(evt) {
     evt.preventDefault();
-    this._callback.formSubmit();
+    this._callback.formSubmit(EventForm.parseDataToEvent(this._data));
   }
 
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._formSubmitHandler);
+  }
+
+  _favoriteClickHandler() {
+    this._callback.favoriteClick();
+  }
+
+  setFavoriteClickHandler(callback) {
+    this._callback.favoriteClick = callback;
+    this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, this._favoriteClickHandler);
+  }
+
+  static parseEventToData(tripEvent) {
+    return Object.assign(
+        {},
+        tripEvent
+    );
+  }
+
+  static parseDataToEvent(data) {
+    data = Object.assign({}, data);
+    return data;
   }
 }

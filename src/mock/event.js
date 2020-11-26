@@ -23,7 +23,6 @@ const eventOffers = [
 ];
 
 for (const eventType of eventTypes) {
-
   if (Math.random() > 0.5) {
     eventType.offers = eventOffers.filter(() => Math.random() > 0.5);
   }
@@ -32,10 +31,7 @@ for (const eventType of eventTypes) {
 const getEventOffers = () => {
   let offers = [];
   if (Math.random() > 0.5) {
-    offers = eventOffers.filter(() => Math.random() > 0.5).map((it) => {
-      it.checked = (Math.random() > 0.5);
-      return it;
-    });
+    offers = eventOffers.filter(() => Math.random() > 0.5);
   }
   return offers;
 };
@@ -44,9 +40,22 @@ const getEventType = () => {
   return eventTypes[getRandomInteger(0, eventTypes.length - 1)];
 };
 
+eventTypes.map((it) => {
+  it.offers = getEventOffers();
+  return it;
+});
+
+const getCheckedOffers = (offers) => {
+  const checkedOffers = {};
+  offers.forEach((it) => {
+    checkedOffers[it.name] = Math.random() > 0.5;
+  });
+  return checkedOffers;
+};
+
 export const generateEvent = () => {
   const eventType = getEventType();
-  eventType.offers = getEventOffers();
+  const checkedOffers = getCheckedOffers(eventType.offers);
   const today = new Date();
   const deadline = new Date();
   deadline.setDate(today.getDate() + 7);
@@ -54,7 +63,9 @@ export const generateEvent = () => {
   const finishDate = getRandomDate(startDate, deadline);
   return (
     {
+      id: Date.now() + parseInt(Math.random() * 10000, 10),
       eventType,
+      checkedOffers,
       place: generatePlace(),
       startDate,
       finishDate,
