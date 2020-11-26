@@ -12,8 +12,8 @@ const createEventOfferTemplate = (offer) => {
 };
 
 const createEventTemplate = (tripEvent) => {
-  const {startDate, finishDate, price, place: {name: placeName}} = tripEvent;
-  const {name: eventTypeName, action, offers, iconURL} = tripEvent.eventType;
+  const {eventType, startDate, finishDate, price, place: {name: placeName}, checkedOffers} = tripEvent;
+  const {name: eventTypeName, action, offers, iconURL} = eventType;
 
   return `<li class="trip-events__item">
                   <div class="event">
@@ -37,7 +37,7 @@ const createEventTemplate = (tripEvent) => {
                     ${offers.length > 0 ? `
                       <h4 class="visually-hidden">Offers:</h4>
                       <ul class="event__selected-offers">
-                          ${offers.filter((it) => it.checked).slice(0, 3).map(createEventOfferTemplate).join(`\n`)}
+                          ${offers.filter((it) => checkedOffers[it.name]).slice(0, 3).map(createEventOfferTemplate).join(`\n`)}
                       </ul>
                     ` : ``}
 
