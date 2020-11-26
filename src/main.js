@@ -5,6 +5,7 @@ import {generateEvent} from "./mock/event.js";
 import {render, RenderPosition} from "./utils/render";
 import TripPresenter from "./presenter/trip";
 import Events from "./model/events";
+import Menu from "./view/menu";
 
 const EVENT_COUNT = 24;
 
@@ -20,6 +21,9 @@ const siteTripInfoElement = document.querySelector(`.trip-info`);
 render(siteTripInfoElement, new RouteCost(events), RenderPosition.BEFOREEND);
 
 const siteEventsElement = document.querySelector(`.trip-events`);
+
+const siteMenuElement = document.querySelector(`#js-trip-menu`);
+render(siteMenuElement, new Menu(), RenderPosition.AFTEREND);
 
 const eventsPresenter = new TripPresenter(siteEventsElement, eventsModel);
 eventsPresenter.init();
