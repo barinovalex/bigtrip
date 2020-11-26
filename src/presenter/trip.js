@@ -10,8 +10,9 @@ import {SortType} from "../const";
 import EventPresenter from "./event";
 
 export default class TripPresenter {
-  constructor(eventsContainer) {
+  constructor(eventsContainer, eventsModel) {
     this._eventsContainer = eventsContainer;
+    this._eventsModel = eventsModel;
     this._sortType = SortType.DEFAULT;
     this._eventsPresenters = {};
     this._daysComponents = [];
