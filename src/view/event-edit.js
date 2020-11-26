@@ -3,6 +3,9 @@ import {upCaseFirst, humanizeDateInput} from "../utils/common.js";
 import {NAME_PLACES} from "../mock/place.js";
 import {generatePlace} from "../mock/place";
 import Smart from "./smart";
+import flatpickr from "flatpickr";
+
+import "../../node_modules/flatpickr/dist/flatpickr.min.css";
 
 const getCheckedOffers = (offers) => {
   const checkedOffers = {};
@@ -169,6 +172,10 @@ export default class EventForm extends Smart {
     super();
     this._event = event;
     this._data = EventForm.parseEventToData(event);
+    this._datepickerStart = null;
+    this._datepickerFinish = null;
+    this._startDateChangeHandler = this._startDateChangeHandler.bind(this);
+    this._finishDateChangeHandler = this._finishDateChangeHandler.bind(this);
     this._editClickHandler = this._editClickHandler.bind(this);
     this._formSubmitHandler = this._formSubmitHandler.bind(this);
     this._favoriteClickHandler = this._favoriteClickHandler.bind(this);
@@ -177,7 +184,7 @@ export default class EventForm extends Smart {
     this._priceInputHandler = this._priceInputHandler.bind(this);
     this._eventOfferToggleHandler = this._eventOfferToggleHandler.bind(this);
     this._setInnerHandlers();
-
+    this._setDatepicker();
   }
 
   reset(tripEvent = this._event) {
@@ -186,10 +193,58 @@ export default class EventForm extends Smart {
     );
   }
 
+  _setDatepicker() {
+    if (this._datepickerStart) {
+      this._datepickerStart.destroy();
+      this._datepickerStart = null;
+    }
+
+    if (this._datepickerFinish) {
+      this._datepickerFinish.destroy();
+      this._datepickerFinish = null;
+    }
+
+    this._datepickerStart = flatpickr(
+        this.getElement().querySelector(`input[name = event-start-time]`),
+        {
+          dateFormat: `d/m/y H:i`,
+          enableTime: true,
+          time_24hr: true,
+          defaultDate: this._data.startDate,
+          onChange: this._startDateChangeHandler // На событие flatpickr передаём наш колбэк
+        }
+    );
+
+    this._datepickerFinish = flatpickr(
+        this.getElement().querySelector(`input[name = event-end-time]`),
+        {
+          dateFormat: `d/m/y H:i`,
+          enableTime: true,
+          time_24hr: true,
+          defaultDate: this._data.finishDate,
+          onChange: this._finishDateChangeHandler // На событие flatpickr передаём наш колбэк
+        }
+    );
+  }
+
+  _startDateChangeHandler([userStartDate]) {
+    this.updateData({
+      startDate: userStartDate
+    });
+  }
+
+  _finishDateChangeHandler([userFinishDate]) {
+    this.updateData({
+      finishDate: userFinishDate
+    });
+  }
+
   restoreHandlers() {
     this._setInnerHandlers();
+    this._setDatepicker();
     this.setFormSubmitHandler(this._callback.formSubmit);
     this.setEditClickHandler(this._callback.editClick);
+    this.setFavoriteClickHandler(this._callback.favoriteClick);
   }
 
   _setInnerHandlers() {

@@ -21,12 +21,6 @@ export default class EventPresenter {
     this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
   }
 
-  resetView() {
-    if (this._mode !== Mode.DEFAULT) {
-      this._replaceFormToCard();
-    }
-  }
-
   _replaceCardToForm() {
     replace(this._eventEditComponent, this._eventComponent);
     document.addEventListener(`keydown`, this._escKeyDownHandler);
