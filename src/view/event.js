@@ -1,5 +1,6 @@
 import {upCaseFirst, humanizeTime, humanizeDateSpread} from "../utils/common.js";
 import Abstract from "./abstract";
+import he from "he";
 
 const createEventOfferTemplate = (offer) => {
   const {name, price} = offer;
@@ -20,7 +21,7 @@ const createEventTemplate = (tripEvent) => {
                     <div class="event__type">
                       <img class="event__type-icon" width="42" height="42" src="${iconURL}" alt="Event type icon">
                     </div>
-                    <h3 class="event__title">${upCaseFirst(eventTypeName)} ${action} ${placeName}</h3>
+                    <h3 class="event__title">${upCaseFirst(eventTypeName)} ${action} ${he.encode(placeName)}</h3>
 
                     <div class="event__schedule">
                       <p class="event__time">
@@ -32,7 +33,7 @@ const createEventTemplate = (tripEvent) => {
                     </div>
 
                     <p class="event__price">
-                      &euro;&nbsp;<span class="event__price-value">${price}</span>
+                      &euro;&nbsp;<span class="event__price-value">${he.encode(price)}</span>
                     </p>
                     ${offers.length > 0 ? `
                       <h4 class="visually-hidden">Offers:</h4>
