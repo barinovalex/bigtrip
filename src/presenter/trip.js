@@ -8,12 +8,12 @@ import {FilterType, SortType, UpdateType, UserAction} from "../const";
 import EventPresenter from "./event";
 import {filter} from "../utils/common.js";
 import EventNew from "./event-new";
+import NewEventButton from "../view/newEventButton";
 
 export default class TripPresenter {
-  constructor(eventsContainer, eventsModel, newEventButton) {
+  constructor(eventsContainer, eventsModel) {
     this._eventsContainer = eventsContainer;
     this._eventsModel = eventsModel;
-    this._newEventButton = newEventButton;
     this._sortType = SortType.DEFAULT;
     this._filterType = FilterType.EVERYTHING;
     this._eventsPresenters = {};
@@ -29,8 +29,6 @@ export default class TripPresenter {
     this._handleFilterTypeChange = this._handleFilterTypeChange.bind(this);
 
     this._eventsModel.addObserver(this._handleModelEvent);
-
-    this._eventNewPresenter = new EventNew(this._eventsContainer, this._handleViewAction);
   }
 
   _getEvents() {
@@ -47,6 +45,12 @@ export default class TripPresenter {
   }
 
   init() {
+    const siteTripMainElement = document.querySelector(`.trip-main`);
+    this._newEventButton = new NewEventButton();
+    render(siteTripMainElement, this._newEventButton, RenderPosition.BEFOREEND);
+
+    this._eventNewPresenter = new EventNew(this._eventsContainer, this._handleViewAction, this._newEventButton);
+
     const siteFiltersElement = document.querySelector(`#js-trip-filter`);
     this._filtersComponent = new Filters(`everything`);
     render(siteFiltersElement, this._filtersComponent, RenderPosition.AFTEREND);
@@ -71,6 +75,7 @@ export default class TripPresenter {
     this._filterType = FilterType.EVERYTHING;
     this._handleModeChange();
     this._eventNewPresenter.init();
+    this._newEventButton.setDisable();
   }
 
   _handleViewAction(actionType, updateType, update) {
@@ -107,7 +112,6 @@ export default class TripPresenter {
   }
 
   _handleModeChange() {
-    this._newEventButton.removeDisable();
     this._eventNewPresenter.destroy();
     Object
       .values(this._eventsPresenters)
@@ -123,7 +127,6 @@ export default class TripPresenter {
   }
 
   _clearEventsList(resetSortType = false) {
-    this._newEventButton.removeDisable();
     this._eventNewPresenter.destroy();
     Object
       .values(this._eventsPresenters)

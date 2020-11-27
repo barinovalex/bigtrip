@@ -3,9 +3,10 @@ import {remove, render, RenderPosition} from "../utils/render.js";
 import {UserAction, UpdateType} from "../const.js";
 
 export default class EventNew {
-  constructor(eventListContainer, changeData) {
+  constructor(eventListContainer, changeData, newEventButton) {
     this._eventListContainer = eventListContainer;
     this._changeData = changeData;
+    this._newEventButton = newEventButton;
 
     this._eventEditComponent = null;
 
@@ -35,7 +36,7 @@ export default class EventNew {
 
     remove(this._eventEditComponent);
     this._eventEditComponent = null;
-
+    this._newEventButton.removeDisable();
     document.removeEventListener(`keydown`, this._escKeyDownHandler);
   }
 
