@@ -4,7 +4,6 @@ import {NAME_PLACES} from "../mock/place.js";
 import {generatePlace} from "../mock/place";
 import Smart from "./smart";
 import flatpickr from "flatpickr";
-import he from "he";
 
 import "../../node_modules/flatpickr/dist/flatpickr.min.css";
 
@@ -111,7 +110,7 @@ const createEventFormTemplate = (tripEvent) => {
                           <span class="visually-hidden">Price</span>
                           &euro;
                         </label>
-                        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${he.encode(price)}">
+                        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${price}">
                       </div>
 
                       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -180,11 +179,11 @@ export default class EventForm extends Smart {
     this._editClickHandler = this._editClickHandler.bind(this);
     this._formSubmitHandler = this._formSubmitHandler.bind(this);
     this._formDeleteClickHandler = this._formDeleteClickHandler.bind(this);
-    this._favoriteClickHandler = this._favoriteClickHandler.bind(this);
     this._eventTypeToggleHandler = this._eventTypeToggleHandler.bind(this);
     this._eventDestinationToggleHandler = this._eventDestinationToggleHandler.bind(this);
     this._priceInputHandler = this._priceInputHandler.bind(this);
     this._eventOfferToggleHandler = this._eventOfferToggleHandler.bind(this);
+    this._toggleFavoriteHandler = this._toggleFavoriteHandler.bind(this);
     this._setInnerHandlers();
     this._setDatepicker();
   }
@@ -261,7 +260,6 @@ export default class EventForm extends Smart {
     this.setFormSubmitHandler(this._callback.formSubmit);
     if (!this._event.newEvent) {
       this.setEditClickHandler(this._callback.editClick);
-      this.setFavoriteClickHandler(this._callback.favoriteClick);
     }
     this.setDeleteClickHandler(this._callback.deleteClick);
   }
@@ -277,6 +275,10 @@ export default class EventForm extends Smart {
     this.getElement()
       .querySelector(`.event__input--price`)
       .addEventListener(`input`, this._priceInputHandler);
+
+    this.getElement()
+      .querySelector(`.event__favorite-btn`)
+      .addEventListener(`click`, this._toggleFavoriteHandler);
 
     Array.from(this.getElement().querySelectorAll(`.event__offer-checkbox`))
       .forEach((it) => it.addEventListener(`click`, this._eventOfferToggleHandler));
@@ -314,6 +316,13 @@ export default class EventForm extends Smart {
     }, true);
   }
 
+  _toggleFavoriteHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      isFavorite: !this._data.isFavorite
+    });
+  }
+
   getTemplate() {
     if (this._data.newEvent) {
       return createNewEventFormTemplate(this._data);
@@ -341,15 +350,6 @@ export default class EventForm extends Smart {
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._formSubmitHandler);
-  }
-
-  _favoriteClickHandler() {
-    this._callback.favoriteClick();
-  }
-
-  setFavoriteClickHandler(callback) {
-    this._callback.favoriteClick = callback;
-    this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, this._favoriteClickHandler);
   }
 
   _formDeleteClickHandler(evt) {

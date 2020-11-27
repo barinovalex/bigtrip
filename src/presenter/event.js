@@ -35,19 +35,6 @@ export default class EventPresenter {
     document.removeEventListener(`keydown`, this._escKeyDownHandler);
     this._mode = Mode.DEFAULT;
   }
-  _toggleFavorite() {
-    this._changeData(
-        UserAction.UPDATE_EVENT,
-        UpdateType.PATCH,
-        Object.assign(
-            {},
-            this._tripEvent,
-            {
-              isFavorite: !this._tripEvent.isFavorite
-            }
-        )
-    );
-  }
 
   _escKeyDownHandler(evt) {
     if (evt.key === `Escape` || evt.key === `Esc`) {
@@ -76,9 +63,6 @@ export default class EventPresenter {
 
     this._eventEditComponent.setFormSubmitHandler(this._handleFormSubmit);
     this._eventEditComponent.setDeleteClickHandler(this._handleDeleteClick);
-    this._eventEditComponent.setFavoriteClickHandler(() => {
-      this._toggleFavorite();
-    });
 
     if (prevEventComponent === null || prevEditComponent === null) {
       render(this._container, this._eventComponent, RenderPosition.BEFOREEND);

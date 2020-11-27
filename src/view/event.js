@@ -33,7 +33,7 @@ const createEventTemplate = (tripEvent) => {
                     </div>
 
                     <p class="event__price">
-                      &euro;&nbsp;<span class="event__price-value">${he.encode(price)}</span>
+                      &euro;&nbsp;<span class="event__price-value">${price}</span>
                     </p>
                     ${offers.length > 0 ? `
                       <h4 class="visually-hidden">Offers:</h4>
