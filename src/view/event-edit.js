@@ -162,9 +162,9 @@ const createEditEventFormTemplate = (event) => {
 };
 
 const createNewEventFormTemplate = (event) => {
-  return `<form class="trip-events__item event event--edit" action="#" method="post">
+  return `<div><form class="trip-events__item event event--edit" action="#" method="post">
                     ${createEventFormTemplate(event)}
-                  </form>`;
+                  </form></div>`;
 };
 
 export default class EventForm extends Smart {
@@ -258,8 +258,10 @@ export default class EventForm extends Smart {
     this._setInnerHandlers();
     this._setDatepicker();
     this.setFormSubmitHandler(this._callback.formSubmit);
-    this.setEditClickHandler(this._callback.editClick);
-    this.setFavoriteClickHandler(this._callback.favoriteClick);
+    if (!this._event.newEvent) {
+      this.setEditClickHandler(this._callback.editClick);
+      this.setFavoriteClickHandler(this._callback.favoriteClick);
+    }
     this.setDeleteClickHandler(this._callback.deleteClick);
   }
 

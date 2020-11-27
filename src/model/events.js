@@ -31,6 +31,7 @@ export default class Events extends Observer {
   }
 
   addEvent(updateType, update) {
+    update.newEvent = false;
     this._tripEvents = [
       update,
       ...this._tripEvents
