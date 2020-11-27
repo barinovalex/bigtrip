@@ -276,9 +276,11 @@ export default class EventForm extends Smart {
       .querySelector(`.event__input--price`)
       .addEventListener(`input`, this._priceInputHandler);
 
-    this.getElement()
-      .querySelector(`.event__favorite-btn`)
-      .addEventListener(`click`, this._toggleFavoriteHandler);
+    if (!this._data.newEvent) {
+      this.getElement()
+        .querySelector(`.event__favorite-btn`)
+        .addEventListener(`click`, this._toggleFavoriteHandler);
+    }
 
     Array.from(this.getElement().querySelectorAll(`.event__offer-checkbox`))
       .forEach((it) => it.addEventListener(`click`, this._eventOfferToggleHandler));
