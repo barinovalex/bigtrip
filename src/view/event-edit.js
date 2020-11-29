@@ -87,7 +87,7 @@ const createEventFormTemplate = (tripEvent) => {
                         <label class="event__label  event__type-output" for="event-destination-1">
                           ${upCaseFirst(eventTypeName)} ${action}
                         </label>
-                        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${placeName ? placeName : ``}" list="destination-list-1">
+                        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${placeName ? placeName : ``}" list="destination-list-1" required>
                         <datalist id="destination-list-1">
                           ${NAME_PLACES.map((it) => `<option value="${it}"></option>`).join(`\n`)}
                         </datalist>
@@ -110,7 +110,7 @@ const createEventFormTemplate = (tripEvent) => {
                           <span class="visually-hidden">Price</span>
                           &euro;
                         </label>
-                        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${price}">
+                        <input class="event__input  event__input--price" id="event-price-1" type="number" name="event-price" value="${price}">
                       </div>
 
                       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -162,9 +162,9 @@ const createEditEventFormTemplate = (event) => {
 };
 
 const createNewEventFormTemplate = (event) => {
-  return `<form class="trip-events__item event event--edit" action="#" method="post">
+  return `<div><form class="trip-events__item event event--edit" action="#" method="post">
                     ${createEventFormTemplate(event)}
-                  </form>`;
+                  </form></div>`;
 };
 
 export default class EventForm extends Smart {
@@ -178,13 +178,28 @@ export default class EventForm extends Smart {
     this._finishDateChangeHandler = this._finishDateChangeHandler.bind(this);
     this._editClickHandler = this._editClickHandler.bind(this);
     this._formSubmitHandler = this._formSubmitHandler.bind(this);
-    this._favoriteClickHandler = this._favoriteClickHandler.bind(this);
+    this._formDeleteClickHandler = this._formDeleteClickHandler.bind(this);
     this._eventTypeToggleHandler = this._eventTypeToggleHandler.bind(this);
     this._eventDestinationToggleHandler = this._eventDestinationToggleHandler.bind(this);
     this._priceInputHandler = this._priceInputHandler.bind(this);
     this._eventOfferToggleHandler = this._eventOfferToggleHandler.bind(this);
+    this._toggleFavoriteHandler = this._toggleFavoriteHandler.bind(this);
     this._setInnerHandlers();
     this._setDatepicker();
+  }
+
+  removeElement() {
+    super.removeElement();
+
+    if (this._datepickerStart) {
+      this._datepickerStart.destroy();
+      this._datepickerStart = null;
+    }
+
+    if (this._datepickerFinish) {
+      this._datepickerFinish.destroy();
+      this._datepickerFinish = null;
+    }
   }
 
   reset(tripEvent = this._event) {
@@ -243,8 +258,10 @@ export default class EventForm extends Smart {
     this._setInnerHandlers();
     this._setDatepicker();
     this.setFormSubmitHandler(this._callback.formSubmit);
-    this.setEditClickHandler(this._callback.editClick);
-    this.setFavoriteClickHandler(this._callback.favoriteClick);
+    if (!this._event.newEvent) {
+      this.setEditClickHandler(this._callback.editClick);
+    }
+    this.setDeleteClickHandler(this._callback.deleteClick);
   }
 
   _setInnerHandlers() {
@@ -258,6 +275,12 @@ export default class EventForm extends Smart {
     this.getElement()
       .querySelector(`.event__input--price`)
       .addEventListener(`input`, this._priceInputHandler);
+
+    if (!this._data.newEvent) {
+      this.getElement()
+        .querySelector(`.event__favorite-btn`)
+        .addEventListener(`click`, this._toggleFavoriteHandler);
+    }
 
     Array.from(this.getElement().querySelectorAll(`.event__offer-checkbox`))
       .forEach((it) => it.addEventListener(`click`, this._eventOfferToggleHandler));
@@ -295,6 +318,13 @@ export default class EventForm extends Smart {
     }, true);
   }
 
+  _toggleFavoriteHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      isFavorite: !this._data.isFavorite
+    });
+  }
+
   getTemplate() {
     if (this._data.newEvent) {
       return createNewEventFormTemplate(this._data);
@@ -324,13 +354,14 @@ export default class EventForm extends Smart {
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._formSubmitHandler);
   }
 
-  _favoriteClickHandler() {
-    this._callback.favoriteClick();
+  _formDeleteClickHandler(evt) {
+    evt.preventDefault();
+    this._callback.deleteClick(EventForm.parseDataToEvent(this._data));
   }
 
-  setFavoriteClickHandler(callback) {
-    this._callback.favoriteClick = callback;
-    this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, this._favoriteClickHandler);
+  setDeleteClickHandler(callback) {
+    this._callback.deleteClick = callback;
+    this.getElement().querySelector(`.event__reset-btn`).addEventListener(`click`, this._formDeleteClickHandler);
   }
 
   static parseEventToData(tripEvent) {

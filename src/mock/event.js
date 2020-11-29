@@ -59,6 +59,7 @@ export const generateEvent = () => {
   const today = new Date();
   const deadline = new Date();
   deadline.setDate(today.getDate() + 7);
+  today.setDate(today.getDate() - 7);
   const startDate = getRandomDate(today, deadline);
   const finishDate = getRandomDate(startDate, deadline);
   return (

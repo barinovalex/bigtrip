@@ -1,4 +1,5 @@
 import moment from "moment";
+import {FilterType} from "../const";
 
 // Функция из интернета по генерации случайного числа из диапазона
 // Источник - https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_random
@@ -35,24 +36,27 @@ export const humanizeDateInput = (date) => {
   return moment(date).format(`dd/mm/YY HH:mm`);
 };
 
-export const humanizeDateSpread = (startDate, finishDate) => {
-  const spread = finishDate - startDate;
-  const spreadDay = moment.duration(spread).get(`days`);
-  const spreadHours = moment.duration(spread).get(`hours`);
-  const spreadMinutes = moment.duration(spread).get(`minutes`);
+export const humanizeDuration = (duration) => {
+  const spreadDay = moment.duration(duration).get(`days`);
+  const spreadHours = moment.duration(duration).get(`hours`);
+  const spreadMinutes = moment.duration(duration).get(`minutes`);
   return `${spreadDay > 0 ? `${spreadDay}D ` : ``}${spreadHours > 0 ? `${spreadHours}H ` : ``}${spreadMinutes > 0 ? `${spreadMinutes}M ` : ``}`;
 };
 
-export const updateItem = (items, update) => {
-  const index = items.findIndex((item) => item.id === update.id);
+export const humanizeDateSpread = (startDate, finishDate) => {
+  return humanizeDuration(finishDate - startDate);
+};
 
-  if (index === -1) {
-    return items;
+export const isDatesEqual = (dateA, dateB) => {
+  if (dateA === null && dateB === null) {
+    return true;
   }
 
-  return [
-    ...items.slice(0, index),
-    update,
-    ...items.slice(index + 1)
-  ];
+  return moment(dateA).isSame(dateB, `day`);
+};
+
+export const filter = {
+  [FilterType.EVERYTHING]: (events) => events.slice(),
+  [FilterType.FUTURE]: (events) => events.filter((task) => task.finishDate > new Date()),
+  [FilterType.PAST]: (events) => events.filter((task) => task.finishDate < new Date())
 };

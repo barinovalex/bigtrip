@@ -1,6 +1,8 @@
 import TripEvent from "../view/event";
 import EventForm from "../view/event-edit";
 import {render, RenderPosition, replace, remove} from "../utils/render";
+import {UserAction, UpdateType} from "../const.js";
+import {isDatesEqual} from "../utils/common";
 
 const Mode = {
   DEFAULT: `DEFAULT`,
@@ -19,6 +21,7 @@ export default class EventPresenter {
     this._mode = Mode.DEFAULT;
     this._handleFormSubmit = this._handleFormSubmit.bind(this);
     this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
+    this._handleDeleteClick = this._handleDeleteClick.bind(this);
   }
 
   _replaceCardToForm() {
@@ -31,17 +34,6 @@ export default class EventPresenter {
     replace(this._eventComponent, this._eventEditComponent);
     document.removeEventListener(`keydown`, this._escKeyDownHandler);
     this._mode = Mode.DEFAULT;
-  }
-  _toggleFavorite() {
-    this._changeData(
-        Object.assign(
-            {},
-            this._tripEvent,
-            {
-              isFavorite: !this._tripEvent.isFavorite
-            }
-        )
-    );
   }
 
   _escKeyDownHandler(evt) {
@@ -70,10 +62,7 @@ export default class EventPresenter {
     });
 
     this._eventEditComponent.setFormSubmitHandler(this._handleFormSubmit);
-
-    this._eventEditComponent.setFavoriteClickHandler(() => {
-      this._toggleFavorite();
-    });
+    this._eventEditComponent.setDeleteClickHandler(this._handleDeleteClick);
 
     if (prevEventComponent === null || prevEditComponent === null) {
       render(this._container, this._eventComponent, RenderPosition.BEFOREEND);
@@ -98,8 +87,26 @@ export default class EventPresenter {
     }
   }
 
-  _handleFormSubmit(tripEvent) {
-    this._changeData(tripEvent);
+  _handleFormSubmit(update) {
+    const isMinorUpdate =
+      !isDatesEqual(this._tripEvent.startDate, update.startDate) ||
+      !isDatesEqual(this._tripEvent.finishDate, update.finishDate) ||
+      (this._tripEvent.price !== update.price);
+
+    this._changeData(
+        UserAction.UPDATE_EVENT,
+        isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+        update
+    );
+    this._replaceFormToCard();
+  }
+
+  _handleDeleteClick(event) {
+    this._changeData(
+        UserAction.DELETE_EVENT,
+        UpdateType.MINOR,
+        event
+    );
     this._replaceFormToCard();
   }
 
