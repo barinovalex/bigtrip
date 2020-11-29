@@ -36,12 +36,15 @@ export const humanizeDateInput = (date) => {
   return moment(date).format(`dd/mm/YY HH:mm`);
 };
 
-export const humanizeDateSpread = (startDate, finishDate) => {
-  const spread = finishDate - startDate;
-  const spreadDay = moment.duration(spread).get(`days`);
-  const spreadHours = moment.duration(spread).get(`hours`);
-  const spreadMinutes = moment.duration(spread).get(`minutes`);
+export const humanizeDuration = (duration) => {
+  const spreadDay = moment.duration(duration).get(`days`);
+  const spreadHours = moment.duration(duration).get(`hours`);
+  const spreadMinutes = moment.duration(duration).get(`minutes`);
   return `${spreadDay > 0 ? `${spreadDay}D ` : ``}${spreadHours > 0 ? `${spreadHours}H ` : ``}${spreadMinutes > 0 ? `${spreadMinutes}M ` : ``}`;
+};
+
+export const humanizeDateSpread = (startDate, finishDate) => {
+  return humanizeDuration(finishDate - startDate);
 };
 
 export const isDatesEqual = (dateA, dateB) => {

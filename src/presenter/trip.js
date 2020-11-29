@@ -20,6 +20,7 @@ export default class TripPresenter {
     this._daysComponents = [];
     this._sortComponent = null;
     this._filtersComponent = null;
+    this._newEventButton = null;
 
     this._noEventsComponent = new NoEvents();
     this._handleViewAction = this._handleViewAction.bind(this);
@@ -27,8 +28,6 @@ export default class TripPresenter {
     this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
     this._handleModeChange = this._handleModeChange.bind(this);
     this._handleFilterTypeChange = this._handleFilterTypeChange.bind(this);
-
-    this._eventsModel.addObserver(this._handleModelEvent);
   }
 
   _getEvents() {
@@ -45,9 +44,15 @@ export default class TripPresenter {
   }
 
   init() {
+    this._eventsModel.addObserver(this._handleModelEvent);
+
     const siteTripMainElement = document.querySelector(`.trip-main`);
-    this._newEventButton = new NewEventButton();
-    render(siteTripMainElement, this._newEventButton, RenderPosition.BEFOREEND);
+
+    if (this._newEventButton === null) {
+      this._newEventButton = new NewEventButton();
+      render(siteTripMainElement, this._newEventButton, RenderPosition.BEFOREEND);
+    }
+
 
     this._eventNewPresenter = new EventNew(this._eventsContainer, this._handleViewAction, this._newEventButton);
 
@@ -64,10 +69,21 @@ export default class TripPresenter {
 
     this._renderSort();
 
-    this._tripDaysComponent = new TripDays().getElement();
+    this._tripDaysComponent = new TripDays();
     render(this._eventsContainer, this._tripDaysComponent, RenderPosition.BEFOREEND);
 
     this._renderEventsList();
+  }
+
+  destroy() {
+    this._clearEventsList({resetSortType: true});
+
+    remove(this._tripDaysComponent);
+    remove(this._filtersComponent);
+    remove(this._sortComponent);
+    this._sortComponent = null;
+
+    this._eventsModel.removeObserver(this._handleModelEvent);
   }
 
   createEvent() {
