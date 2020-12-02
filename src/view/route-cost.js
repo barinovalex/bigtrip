@@ -3,7 +3,7 @@ import Abstract from "./abstract";
 const createRouteCostTemplate = (events) => {
 
   const tripPrice = events.reduce((accumulator, it) =>{
-    return accumulator + it.price + it.eventType.offers.filter((offer) => offer.checked).reduce((acc, offer) => acc + offer.price, 0);
+    return accumulator + it.price + it.offers.reduce((acc, offer) => acc + offer.price, 0);
   }, 0);
 
   return `<p class="trip-info__cost">

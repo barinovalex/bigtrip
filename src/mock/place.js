@@ -27,7 +27,9 @@ export const generatePlace = () => {
     {
       name: NAME_PLACES[getRandomInteger(0, NAME_PLACES.length - 1)],
       description: new Array(getRandomInteger(0, 5)).fill().map(() => descriptions[getRandomInteger(0, descriptions.length - 1)]).join(` `),
-      photos: new Array(getRandomInteger(0, 10)).fill().map(() => `http://picsum.photos/248/152?r=${Math.random()}`)
+      pictures: new Array(getRandomInteger(0, 10)).fill().map(() => {
+        return {src: `http://picsum.photos/248/152?r=${Math.random()}`};
+      })
     }
   );
 };

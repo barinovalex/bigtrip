@@ -1,7 +1,6 @@
 import Abstract from "./abstract";
 import Chart from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import {eventTypes} from "../mock/event";
 import {humanizeDuration} from "../utils/common";
 
 const BAR_HEIGHT = 55;
@@ -12,7 +11,7 @@ const getLabelandData = (items, dataType) => {
     data: [],
   };
   items.forEach((item) => {
-    data.labels.push(item.type.name.toUpperCase());
+    data.labels.push(item.type.toUpperCase());
     data.data.push(item[dataType]);
   });
   return data;
@@ -256,12 +255,12 @@ export default class Statistics extends Abstract {
   _getChartsData(events) {
     const data = {};
     events.forEach((event) => {
-      if (event.eventType.name in data) {
-        data[event.eventType.name].count++;
-        data[event.eventType.name].sum += event.price;
-        data[event.eventType.name].duration += event.finishDate - event.startDate;
+      if (event.eventType in data) {
+        data[event.eventType].count++;
+        data[event.eventType].sum += event.price;
+        data[event.eventType].duration += event.finishDate - event.startDate;
       } else {
-        data[event.eventType.name] = {
+        data[event.eventType] = {
           type: event.eventType,
           count: 1,
           sum: event.price,
@@ -286,11 +285,8 @@ export default class Statistics extends Abstract {
     const transportCtx = this.getElement().querySelector(`.statistics__chart--transport`);
     const timeSpendCtx = this.getElement().querySelector(`.statistics__chart--time`);
 
-    transportCtx.height = BAR_HEIGHT * 4;
-    timeSpendCtx.height = BAR_HEIGHT * 4;
-
     this._renderMoneyChart = renderMoneyChart(moneyCtx, this._data.sort((a, b) => b.sum - a.sum));
-    this._renderTransportChart = renderTransportChart(transportCtx, this._data.filter((it) => it.type.action === `to`).sort((a, b) => b.count - a.count));
+    this._renderTransportChart = renderTransportChart(transportCtx, this._data.sort((a, b) => b.count - a.count));
     this._renderTimeSpendChart = renderTimeSpendChart(timeSpendCtx, this._data.sort((a, b) => b.duration - a.duration));
   }
 }

@@ -3,25 +3,24 @@ import Abstract from "./abstract";
 import he from "he";
 
 const createEventOfferTemplate = (offer) => {
-  const {name, price} = offer;
+  const {title, price} = offer;
 
   return `<li class="event__offer">
-                        <span class="event__offer-title">${name}</span>
+                        <span class="event__offer-title">${title}</span>
                         &plus;
                         &euro;&nbsp;<span class="event__offer-price">${price}</span>
                        </li>`;
 };
 
-const createEventTemplate = (tripEvent) => {
-  const {eventType, startDate, finishDate, price, place: {name: placeName}, checkedOffers} = tripEvent;
-  const {name: eventTypeName, action, offers, iconURL} = eventType;
+const createEventTemplate = (tripEvent, allOffers) => {
+  const {eventType: eventTypeName, startDate, finishDate, price, place: {name: placeName}, offers} = tripEvent;
 
   return `<li class="trip-events__item">
                   <div class="event">
                     <div class="event__type">
-                      <img class="event__type-icon" width="42" height="42" src="${iconURL}" alt="Event type icon">
+                      <img class="event__type-icon" width="42" height="42" src="img/icons/${eventTypeName}.png" alt="Event type icon">
                     </div>
-                    <h3 class="event__title">${upCaseFirst(eventTypeName)} ${action} ${he.encode(placeName)}</h3>
+                    <h3 class="event__title">${upCaseFirst(eventTypeName)} ${allOffers[eventTypeName].action} ${he.encode(placeName)}</h3>
 
                     <div class="event__schedule">
                       <p class="event__time">
@@ -38,7 +37,7 @@ const createEventTemplate = (tripEvent) => {
                     ${offers.length > 0 ? `
                       <h4 class="visually-hidden">Offers:</h4>
                       <ul class="event__selected-offers">
-                          ${offers.filter((it) => checkedOffers[it.name]).slice(0, 3).map(createEventOfferTemplate).join(`\n`)}
+                          ${offers.slice(0, 3).map(createEventOfferTemplate).join(`\n`)}
                       </ul>
                     ` : ``}
 
@@ -50,14 +49,15 @@ const createEventTemplate = (tripEvent) => {
 };
 
 export default class TripEvent extends Abstract {
-  constructor(tripEvent) {
+  constructor(tripEvent, offers) {
     super();
     this._event = tripEvent;
+    this._offers = offers;
     this._editClickHandler = this._editClickHandler.bind(this);
   }
 
   getTemplate() {
-    return createEventTemplate(this._event);
+    return createEventTemplate(this._event, this._offers);
   }
 
   _editClickHandler(evt) {

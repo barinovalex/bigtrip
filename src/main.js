@@ -1,35 +1,36 @@
-import RouteInfo from './view/route-info.js';
-import RouteCost from "./view/route-cost.js";
-
-import {generateEvent} from "./mock/event.js";
-import {render, RenderPosition, remove} from "./utils/render";
 import TripPresenter from "./presenter/trip";
 import Events from "./model/events";
 import Menu from "./view/menu";
-import {MenuItem} from "./const.js";
 import Statistics from "./view/statistics";
+import Api from "./api";
 
-const EVENT_COUNT = 24;
-let statisticsComponent = null;
+import {render, RenderPosition, remove} from "./utils/render";
+import {MenuItem, UpdateType} from "./const.js";
 
-const events = new Array(EVENT_COUNT).fill(``).map(generateEvent).sort((a, b) => a.startDate - b.startDate);
-
-const eventsModel = new Events();
-eventsModel.setEvents(events);
-
-const siteTripMainElement = document.querySelector(`.trip-main`);
-render(siteTripMainElement, new RouteInfo(events), RenderPosition.AFTERBEGIN);
-
-const siteTripInfoElement = document.querySelector(`.trip-info`);
-render(siteTripInfoElement, new RouteCost(events), RenderPosition.BEFOREEND);
 
 const siteEventsElement = document.querySelector(`.trip-events`);
-
-const siteMenuComponent = new Menu();
 const siteMenuElement = document.querySelector(`#js-trip-menu`);
-render(siteMenuElement, siteMenuComponent, RenderPosition.AFTEREND);
 
-const eventsPresenter = new TripPresenter(siteEventsElement, eventsModel);
+const AUTHORIZATION = `Basic kdjf823kjhjhf74jlk8s`;
+const END_POINT = `https://12.ecmascript.pages.academy/big-trip`;
+let statisticsComponent = null;
+
+const eventsModel = new Events();
+const api = new Api(END_POINT, AUTHORIZATION);
+const siteMenuComponent = new Menu();
+const eventsPresenter = new TripPresenter(siteEventsElement, eventsModel, api);
+
+Promise.all([api.getDestinations(), api.getOffers(), api.getEvents()])
+  .then(([destinations, offers, events]) => {
+    eventsModel.setDestinations(Events.adaptDestinationsToClient(destinations));
+    eventsModel.setOffers(Events.adaptOffersToClient(offers));
+    eventsModel.setEvents(UpdateType.INIT, events);
+
+    render(siteMenuElement, siteMenuComponent, RenderPosition.AFTEREND);
+  })
+  .catch(() => {
+    eventsModel.setEvents(UpdateType.INIT, []);
+  });
 
 const handleSiteMenuClick = (menuItem) => {
   siteMenuComponent.setMenuItem(menuItem);

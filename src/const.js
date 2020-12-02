@@ -15,7 +15,8 @@ export const UserAction = {
 export const UpdateType = {
   PATCH: `PATCH`,
   MINOR: `MINOR`,
-  MAJOR: `MAJOR`
+  MAJOR: `MAJOR`,
+  INIT: `INIT`
 };
 
 export const FilterType = {
@@ -27,5 +28,18 @@ export const FilterType = {
 export const MenuItem = {
   TABLE: `Table`,
   STATS: `Stats`
+};
+
+export const EventType = {
+  taxi: {iconURL: `img/icons/taxi.png`, action: `to`},
+  bus: {iconURL: `img/icons/bus.png`, action: `to`},
+  train: {iconURL: `img/icons/train.png`, action: `to`},
+  ship: {iconURL: `img/icons/ship.png`, action: `to`},
+  transport: {iconURL: `img/icons/transport.png`, action: `to`},
+  drive: {iconURL: `img/icons/drive.png`, action: `to`},
+  flight: {iconURL: `img/icons/flight.png`, action: `to`},
+  checkin: {iconURL: `img/icons/check-in.png`, action: `in`},
+  sightseeing: {iconURL: `img/icons/sightseeing.png`, action: `in`},
+  restaurant: {iconURL: `img/icons/restaurant.png`, action: `in`},
 };
 
