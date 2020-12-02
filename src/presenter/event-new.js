@@ -3,10 +3,12 @@ import {remove, render, RenderPosition} from "../utils/render.js";
 import {UserAction, UpdateType} from "../const.js";
 
 export default class EventNew {
-  constructor(eventListContainer, changeData, newEventButton) {
+  constructor(eventListContainer, changeData, newEventButton, destinations, offers) {
     this._eventListContainer = eventListContainer;
     this._changeData = changeData;
     this._newEventButton = newEventButton;
+    this._destinations = destinations;
+    this._offers = offers;
 
     this._eventEditComponent = null;
 
@@ -20,7 +22,7 @@ export default class EventNew {
       return;
     }
 
-    this._eventEditComponent = new EventForm();
+    this._eventEditComponent = new EventForm(undefined, this._destinations, this._offers);
     this._eventEditComponent.setFormSubmitHandler(this._handleFormSubmit);
     this._eventEditComponent.setDeleteClickHandler(this._handleDeleteClick);
 
@@ -40,15 +42,31 @@ export default class EventNew {
     document.removeEventListener(`keydown`, this._escKeyDownHandler);
   }
 
+  setSaving() {
+    this._eventEditComponent.updateData({
+      isDisabled: true,
+      isSaving: true
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this._eventEditComponent.updateData({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false
+      });
+    };
+
+    this._eventEditComponent.shake(resetFormState);
+  }
+
   _handleFormSubmit(tripEvent) {
     this._changeData(
         UserAction.ADD_EVENT,
         UpdateType.MINOR,
-        // Пока у нас нет сервера, который бы после сохранения
-        // выдывал честный id задачи, нам нужно позаботиться об этом самим
-        Object.assign({id: Date.now() + parseInt(Math.random() * 10000, 10)}, tripEvent)
+        tripEvent
     );
-    this.destroy();
   }
 
   _handleDeleteClick() {

@@ -5,24 +5,33 @@ import Filters from "../view/filters";
 import TripDays from "../view/trip-days";
 import TripDay from "../view/trip-day";
 import {FilterType, SortType, UpdateType, UserAction} from "../const";
-import EventPresenter from "./event";
+import EventPresenter, {State as EventPresenterViewState} from "./event";
 import {filter} from "../utils/common.js";
 import EventNew from "./event-new";
 import NewEventButton from "../view/newEventButton";
+import Loading from "../view/loading.js";
+import RouteInfo from "../view/route-info";
+import RouteCost from "../view/route-cost";
 
 export default class TripPresenter {
-  constructor(eventsContainer, eventsModel) {
+  constructor(eventsContainer, eventsModel, api) {
     this._eventsContainer = eventsContainer;
     this._eventsModel = eventsModel;
+    this._api = api;
     this._sortType = SortType.DEFAULT;
     this._filterType = FilterType.EVERYTHING;
     this._eventsPresenters = {};
     this._daysComponents = [];
     this._sortComponent = null;
+    this._routeInfoComponent = null;
+    this._routeCostComponent = null;
     this._filtersComponent = null;
     this._newEventButton = null;
+    this._isLoading = true;
 
     this._noEventsComponent = new NoEvents();
+    this._loadingComponent = new Loading();
+
     this._handleViewAction = this._handleViewAction.bind(this);
     this._handleModelEvent = this._handleModelEvent.bind(this);
     this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
@@ -45,7 +54,6 @@ export default class TripPresenter {
 
   init() {
     this._eventsModel.addObserver(this._handleModelEvent);
-
     const siteTripMainElement = document.querySelector(`.trip-main`);
 
     if (this._newEventButton === null) {
@@ -54,19 +62,48 @@ export default class TripPresenter {
     }
 
 
-    this._eventNewPresenter = new EventNew(this._eventsContainer, this._handleViewAction, this._newEventButton);
-
     const siteFiltersElement = document.querySelector(`#js-trip-filter`);
     this._filtersComponent = new Filters(`everything`);
     render(siteFiltersElement, this._filtersComponent, RenderPosition.AFTEREND);
 
     this._filtersComponent.setFilterTypeChangeHandler(this._handleFilterTypeChange);
 
+    this._renderTrip();
+  }
+
+  _renderTripSummary() {
+    const prevRouteInfoComponent = this._routeInfoComponent;
+    this._routeInfoComponent = new RouteInfo(this._eventsModel.getEvents());
+    this._routeCostComponent = new RouteCost(this._eventsModel.getEvents());
+
+    const siteTripMainElement = document.querySelector(`.trip-main`);
+
+    if (prevRouteInfoComponent === null) {
+      render(siteTripMainElement, this._routeInfoComponent, RenderPosition.AFTERBEGIN);
+    } else {
+      replace(this._routeInfoComponent, prevRouteInfoComponent);
+      remove(prevRouteInfoComponent);
+    }
+
+    render(this._routeInfoComponent, this._routeCostComponent, RenderPosition.BEFOREEND);
+  }
+
+  _renderTrip() {
+    if (this._isLoading) {
+      this._renderLoading();
+      return;
+    }
+
     if (this._getEvents().length < 1) {
       this._renderNoEvents();
       return;
     }
 
+    this._renderTripSummary();
+
+    this._destination = this._eventsModel.getDestinations();
+    this._offers = this._eventsModel.getOffers();
+    this._eventNewPresenter = new EventNew(this._eventsContainer, this._handleViewAction, this._newEventButton, this._destination, this._offers);
     this._renderSort();
 
     this._tripDaysComponent = new TripDays();
@@ -97,13 +134,34 @@ export default class TripPresenter {
   _handleViewAction(actionType, updateType, update) {
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
-        this._eventsModel.updateEvent(updateType, update);
+        this._eventsPresenters[update.id].setViewState(EventPresenterViewState.SAVING);
+        this._api.updateEvent(update)
+          .then((response) => {
+            this._eventsModel.updateEvent(updateType, response);
+          })
+          .catch(() => {
+            this._eventsPresenters[update.id].setViewState(EventPresenterViewState.ABORTING);
+          });
         break;
       case UserAction.ADD_EVENT:
-        this._eventsModel.addEvent(updateType, update);
+        this._eventNewPresenter.setSaving();
+        this._api.addEvent(update)
+          .then((response) => {
+            this._eventsModel.addEvent(updateType, response);
+          })
+          .catch(() => {
+            this._eventNewPresenter.setAborting();
+          });
         break;
       case UserAction.DELETE_EVENT:
-        this._eventsModel.deleteEvent(updateType, update);
+        this._eventsPresenters[update.id].setViewState(EventPresenterViewState.DELETING);
+        this._api.deleteEvent(update)
+          .then(() => {
+            this._eventsModel.deleteEvent(updateType, update);
+          })
+          .catch(() => {
+            this._eventsPresenters[update.id].setViewState(EventPresenterViewState.ABORTING);
+          });
         break;
     }
   }
@@ -111,18 +169,25 @@ export default class TripPresenter {
   _handleModelEvent(updateType, data) {
     switch (updateType) {
       case UpdateType.PATCH:
-        // - обновить часть списка (например, когда поменялось описание)
         this._eventsPresenters[data.id].init(data);
+        this._renderTripSummary();
         break;
       case UpdateType.MINOR:
         this._clearEventsList();
+        this._renderTripSummary();
         this._renderSort();
         this._renderEventsList();
         break;
       case UpdateType.MAJOR:
         this._clearEventsList(true);
+        this._renderTripSummary();
         this._renderSort();
         this._renderEventsList();
+        break;
+      case UpdateType.INIT:
+        this._isLoading = false;
+        remove(this._loadingComponent);
+        this._renderTrip();
         break;
     }
   }
@@ -187,6 +252,10 @@ export default class TripPresenter {
     render(this._eventsContainer, this._noEventsComponent, RenderPosition.BEFOREEND);
   }
 
+  _renderLoading() {
+    render(this._eventsContainer, this._loadingComponent, RenderPosition.BEFOREEND);
+  }
+
   _renderEventsList() {
     let currentDay = 0;
     let dayEventsListElement;
@@ -208,7 +277,7 @@ export default class TripPresenter {
         currentDay = event.startDate.getDate();
         dayCounter++;
       }
-      this._eventsPresenters[event.id] = new EventPresenter(dayEventsListElement, this._handleViewAction, this._handleModeChange);
+      this._eventsPresenters[event.id] = new EventPresenter(dayEventsListElement, this._handleViewAction, this._handleModeChange, this._destination, this._offers);
       this._eventsPresenters[event.id].init(event);
     }
   }

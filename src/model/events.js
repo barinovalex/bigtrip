@@ -6,12 +6,30 @@ export default class Events extends Observer {
     this._tripEvents = [];
   }
 
-  setEvents(tripEvents) {
+  setEvents(updateType, tripEvents) {
     this._tripEvents = tripEvents.slice();
+
+    this._notify(updateType);
   }
 
   getEvents() {
     return this._tripEvents;
+  }
+
+  setDestinations(destinations) {
+    this._destinations = destinations;
+  }
+
+  setOffers(offers) {
+    this._offers = offers;
+  }
+
+  getOffers() {
+    return this._offers;
+  }
+
+  getDestinations() {
+    return this._destinations;
   }
 
   updateEvent(updateType, update) {
@@ -53,5 +71,75 @@ export default class Events extends Observer {
     ];
 
     this._notify(updateType);
+  }
+
+  static adaptDestinationsToClient(destinations) {
+    const adaptedEvent = {};
+    destinations.forEach((it) => {
+      adaptedEvent[it.name] = it;
+    });
+
+    return adaptedEvent;
+  }
+
+  static adaptOffersToClient(offers) {
+    const adaptedEvent = {};
+    offers.forEach((it) => {
+      adaptedEvent[it.type] = it;
+      adaptedEvent[it.type][`action`] = (
+        it.type === `check-in`
+        || it.type === `sightseeing`
+        || it.type === `restaurant`
+          ? `in` : `to`);
+    });
+    return adaptedEvent;
+  }
+
+  static adaptEventToClient(tripEvent) {
+    const adaptedEvent = Object.assign(
+        {},
+        tripEvent,
+        {
+          price: tripEvent.base_price,
+          finishDate: new Date(tripEvent.date_to),
+          startDate: new Date(tripEvent.date_from),
+          place: tripEvent.destination,
+          isFavorite: tripEvent.is_favorite,
+          eventType: tripEvent.type
+        }
+    );
+
+    delete adaptedEvent.base_price;
+    delete adaptedEvent.date_from;
+    delete adaptedEvent.date_to;
+    delete adaptedEvent.destination;
+    delete adaptedEvent.is_favorite;
+    delete adaptedEvent.type;
+
+    return adaptedEvent;
+  }
+
+  static adaptToServer(tripEvent) {
+    const adaptedEvent = Object.assign(
+        {},
+        tripEvent,
+        {
+          "date_from": tripEvent.startDate instanceof Date ? tripEvent.startDate.toISOString() : null,
+          "date_to": tripEvent.finishDate instanceof Date ? tripEvent.finishDate.toISOString() : null,
+          "is_favorite": tripEvent.isFavorite,
+          "destination": tripEvent.place,
+          "type": tripEvent.eventType,
+          "base_price": Number(tripEvent.price),
+        }
+    );
+
+    delete adaptedEvent.newEvent;
+    delete adaptedEvent.startDate;
+    delete adaptedEvent.finishDate;
+    delete adaptedEvent.isFavorite;
+    delete adaptedEvent.place;
+    delete adaptedEvent.eventType;
+    delete adaptedEvent.price;
+    return adaptedEvent;
   }
 }

@@ -9,11 +9,18 @@ const Mode = {
   EDITING: `EDITING`
 };
 
+export const State = {
+  SAVING: `SAVING`,
+  DELETING: `DELETING`,
+  ABORTING: `ABORTING`,
+};
+
 
 export default class EventPresenter {
-  constructor(container, handleEventChange, changeMode) {
+  constructor(container, handleEventChange, changeMode, destinations, offers) {
     this._container = container;
-
+    this._destinations = destinations;
+    this._offers = offers;
     this._eventComponent = null;
     this._eventEditComponent = null;
     this._changeData = handleEventChange.bind(this);
@@ -50,8 +57,8 @@ export default class EventPresenter {
     const prevEventComponent = this._eventComponent;
     const prevEditComponent = this._eventEditComponent;
 
-    this._eventComponent = new TripEvent(tripEvent);
-    this._eventEditComponent = new EventForm(tripEvent);
+    this._eventComponent = new TripEvent(tripEvent, this._offers);
+    this._eventEditComponent = new EventForm(tripEvent, this._destinations, this._offers);
 
     this._eventComponent.setEditClickHandler(() => {
       this._replaceCardToForm();
@@ -74,7 +81,8 @@ export default class EventPresenter {
     }
 
     if (this._mode === Mode.EDITING) {
-      replace(this._eventEditComponent, prevEditComponent);
+      replace(this._eventComponent, prevEditComponent);
+      this._mode = Mode.DEFAULT;
     }
 
     remove(prevEventComponent);
@@ -87,6 +95,37 @@ export default class EventPresenter {
     }
   }
 
+  setViewState(state) {
+    const resetFormState = () => {
+      this._eventEditComponent.updateData({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false
+      });
+    };
+
+
+    switch (state) {
+      case State.SAVING:
+        this._eventEditComponent.updateData({
+          isDisabled: true,
+          isSaving: true
+        });
+        break;
+      case State.DELETING:
+        this._eventEditComponent.updateData({
+          isDisabled: true,
+          isDeleting: true
+        });
+        break;
+      case State.ABORTING:
+        this._eventComponent.shake(resetFormState);
+        this._eventEditComponent.shake(resetFormState);
+        break;
+    }
+  }
+
+
   _handleFormSubmit(update) {
     const isMinorUpdate =
       !isDatesEqual(this._tripEvent.startDate, update.startDate) ||
@@ -98,7 +137,6 @@ export default class EventPresenter {
         isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
         update
     );
-    this._replaceFormToCard();
   }
 
   _handleDeleteClick(event) {
@@ -107,7 +145,6 @@ export default class EventPresenter {
         UpdateType.MINOR,
         event
     );
-    this._replaceFormToCard();
   }
 
   destroy() {
