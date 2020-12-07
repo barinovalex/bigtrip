@@ -240,7 +240,7 @@ export default class EventForm extends Smart {
         {
           dateFormat: `d/m/y H:i`,
           enableTime: true,
-          time_24hr: true,
+          time_24hr: true,  // eslint-disable-line
           defaultDate: this._data.startDate,
           onChange: this._startDateChangeHandler // На событие flatpickr передаём наш колбэк
         }
@@ -251,7 +251,7 @@ export default class EventForm extends Smart {
         {
           dateFormat: `d/m/y H:i`,
           enableTime: true,
-          time_24hr: true,
+          time_24hr: true,  // eslint-disable-line
           defaultDate: this._data.finishDate,
           onChange: this._finishDateChangeHandler // На событие flatpickr передаём наш колбэк
         }
