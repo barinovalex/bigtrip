@@ -1,9 +1,0 @@
-webpack.config.js
-package.json
-
-# Папка с собранными файлами проекта
-build/
-
-# Собранные JS-файлы (бандл)
-public/bundle.js
-public/bundle.js.map
